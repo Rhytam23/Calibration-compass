@@ -162,6 +162,7 @@ def get_logical_activity(circuit):
     activity = {
         q: {
             "one_q": 0,
+            "one_q_physical": 0,
             "two_q": 0,
             "total": 0
         }
@@ -189,6 +190,12 @@ def get_logical_activity(circuit):
             if len(instruction.qubits) == 1:
 
                 activity[logical]["one_q"] += 1
+
+                # rz is a virtual (error-free) gate on IBM
+                # hardware, so it carries no sx error.
+                if instruction.operation.name != "rz":
+
+                    activity[logical]["one_q_physical"] += 1
 
             elif len(instruction.qubits) == 2:
 
@@ -397,7 +404,7 @@ def extract_features(
         )
 
         weighted_sx_total += (
-            activity[logical]["one_q"] * sx
+            activity[logical]["one_q_physical"] * sx
         )
 
         activity_readout_values.append(
