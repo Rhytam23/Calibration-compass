@@ -1,4 +1,3 @@
-import ast
 import math
 from pathlib import Path
 
@@ -13,7 +12,7 @@ print("CALIBRATIONCOMPASS - FIX BELL DATASET")
 print("=" * 90)
 
 
-BASE = Path(r"P:\Calibration-compass")
+BASE = Path(__file__).resolve().parent
 
 INPUT_FILE = (
     BASE

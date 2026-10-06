@@ -14,7 +14,7 @@ print("CALIBRATIONCOMPASS - CLEAN REAL HARDWARE DATASET")
 print("=" * 90)
 
 
-BASE = Path(r"P:\Calibration-compass")
+BASE = Path(__file__).resolve().parent
 
 GHZ_RESULTS = (
     BASE
@@ -145,20 +145,32 @@ def make_circuit(name):
     return qc
 
 
-def ideal_distribution(circuit):
+def ideal_distribution(circuit, active_logical=None):
+    """Ideal outcome distribution, marginalised onto active_logical qubits.
 
-    state = Statevector.from_instruction(
-        circuit
-    )
+    Keys are ordered like project_counts(): highest active logical qubit
+    on the left.
+    """
+
+    state = Statevector.from_instruction(circuit)
 
     probabilities = state.probabilities_dict()
 
-    return {
-        str(key).replace(" ", ""):
-        float(value)
-        for key, value in probabilities.items()
-        if float(value) > 1e-12
-    }
+    n = circuit.num_qubits
+
+    if active_logical is None:
+        active_logical = list(range(n))
+
+    marginal = {}
+
+    for key, value in probabilities.items():
+        key = str(key).replace(" ", "")
+        short = "".join(
+            key[n - 1 - q] for q in reversed(active_logical)
+        )
+        marginal[short] = marginal.get(short, 0.0) + float(value)
+
+    return {k: v for k, v in marginal.items() if v > 1e-12}
 
 
 def project_counts(
@@ -778,7 +790,8 @@ for backend_name in BACKENDS:
         )
 
         ideal = ideal_distribution(
-            circuit
+            circuit,
+            active_logical
         )
 
         for seed in SEEDS:

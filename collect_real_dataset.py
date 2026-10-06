@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "."))
+
 import ast
 import csv
 import math
@@ -364,8 +369,16 @@ for backend_name in BACKENDS:
 
         for seed in SEEDS:
 
+            # Measure the logical qubits BEFORE transpiling so the
+            # result register has one bit per logical qubit (3 bits),
+            # matching the ideal distribution. Measuring after
+            # transpile would add a 156-bit register and give
+            # fidelity 0.
+            logical = base_circuit.copy()
+            logical.measure_all()
+
             compiled = transpile(
-                base_circuit,
+                logical,
                 backend=backend,
                 optimization_level=3,
                 layout_method="sabre",
@@ -373,9 +386,7 @@ for backend_name in BACKENDS:
                 seed_transpiler=seed
             )
 
-            measured = compiled.copy()
-
-            measured.measure_all()
+            measured = compiled
 
             ideal_state = Statevector.from_instruction(
                 base_circuit
@@ -663,17 +674,21 @@ if (
             "gate_count":
                 math.nan,
 
+            # Not recorded in the source validation file; leave
+            # unknown rather than inventing values.
             "1Q_gates":
-                1,
+                math.nan,
 
             "2Q_gates":
                 r.get(
-                    "2Q_gates",
-                    2
+                    "two_qubit_count",
+                    r.get("2Q_gates", math.nan)
                 ),
 
             "readout_sum":
-                r["avg_readout"] * 3,
+                r["avg_readout"] * len(mapping)
+                if mapping
+                else math.nan,
 
             "avg_readout":
                 r["avg_readout"],

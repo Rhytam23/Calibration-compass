@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+
 import numpy as np
 import pandas as pd
 

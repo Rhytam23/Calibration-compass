@@ -14,7 +14,7 @@ print("=" * 80)
 
 rows = []
 
-for circuit, group in df.groupby("circuit"):
+for (circuit, backend), group in df.groupby(["circuit", "backend"]):
 
     fidelity_readout_corr = group["fidelity"].corr(
         group["avg_readout"]
@@ -32,6 +32,7 @@ for circuit, group in df.groupby("circuit"):
 
     rows.append({
         "circuit": circuit,
+        "backend": backend,
         "avg_readout_corr": fidelity_readout_corr,
         "max_readout_corr": fidelity_max_readout_corr,
         "fidelity_spread": spread,

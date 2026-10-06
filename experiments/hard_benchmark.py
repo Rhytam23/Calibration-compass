@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+
 import numpy as np
 import pandas as pd
 
@@ -638,7 +643,10 @@ def apply_random_drift(
                 ][(qubit,)]
             )
 
-            if properties is not None:
+            if (
+                properties is not None
+                and properties.error is not None
+            ):
 
                 old_error = (
                     properties.error
@@ -684,7 +692,8 @@ def evaluate(
 
     ideal_job = ideal_simulator.run(
         transpiled,
-        shots=SHOTS
+        shots=SHOTS,
+        seed_simulator=1234
     )
 
     ideal_counts = (
@@ -705,7 +714,8 @@ def evaluate(
 
     noisy_job = noisy_simulator.run(
         transpiled,
-        shots=SHOTS
+        shots=SHOTS,
+        seed_simulator=5678
     )
 
     noisy_counts = (
@@ -921,7 +931,8 @@ for circuit_id in range(
             transpiled = transpile(
                 circuit,
                 backend=base_backend,
-                optimization_level=1
+                optimization_level=1,
+                seed_transpiler=scenario_seed
             )
 
             # Fresh backend for this simulated day
@@ -931,7 +942,7 @@ for circuit_id in range(
 
             rng = np.random.default_rng(
                 scenario_seed
-                + hash(backend_name) % 1000
+                + {"Sherbrooke": 0, "Torino": 1, "Fez": 2}.get(backend_name, 3)
             )
 
             # Day 0 = normal

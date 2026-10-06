@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "."))
+
 import numpy as np
 import pandas as pd
 
@@ -175,6 +180,17 @@ print(summary)
 
 print("\nCORRELATION")
 print("=" * 80)
+
+within = [
+    g["fidelity"].corr(g["avg_readout"])
+    for _, g in df.groupby(["circuit", "backend"])
+]
+
+print(
+    "Mean within-(circuit, backend) fidelity vs avg readout: "
+    f"{pd.Series(within).mean():.4f}  "
+    "(pooled value below is confounded by circuit/backend)"
+)
 
 print(
     f"Overall fidelity vs avg readout: "

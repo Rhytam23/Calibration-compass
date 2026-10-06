@@ -1,3 +1,9 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "."))
+
+import os
 from qiskit_ibm_runtime import QiskitRuntimeService
 import pandas as pd
 import numpy as np
@@ -55,10 +61,10 @@ for backend in backends:
     rows.append({
         "backend": backend.name,
         "qubits": backend.num_qubits,
-        "avg_readout_error": np.mean(readout),
-        "max_readout_error": np.max(readout),
-        "avg_t1": np.mean(t1),
-        "avg_t2": np.mean(t2),
+        "avg_readout_error": np.mean(readout) if readout else np.nan,
+        "max_readout_error": np.max(readout) if readout else np.nan,
+        "avg_t1": np.mean(t1) if t1 else np.nan,
+        "avg_t2": np.mean(t2) if t2 else np.nan,
         "calibration_time": props.last_update_date,
     })
 
@@ -71,6 +77,8 @@ print("=" * 80)
 print(
     df.to_string(index=False)
 )
+
+os.makedirs("results", exist_ok=True)
 
 out = (
     "results/live_ibm_calibration.csv"

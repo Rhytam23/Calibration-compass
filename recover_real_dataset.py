@@ -1,4 +1,3 @@
-import ast
 import math
 from pathlib import Path
 
@@ -17,7 +16,7 @@ print("=" * 90)
 # Configuration
 # ------------------------------------------------------------
 
-BASE = Path(r"P:\Calibration-compass")
+BASE = Path(__file__).resolve().parent
 
 INPUT_FILE = (
     BASE

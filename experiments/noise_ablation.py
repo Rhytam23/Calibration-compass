@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+
 import numpy as np
 
 from qiskit import QuantumCircuit, transpile
@@ -314,8 +319,8 @@ for noise_name in [
     }
 
     gap = (
-        values[33]
-        - values[22]
+        values[CANDIDATES[1]]
+        - values[CANDIDATES[0]]
     )
 
     print(

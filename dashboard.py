@@ -436,7 +436,22 @@ def analyze_backends(
                     **features
                 })
 
-            except Exception:
+            except Exception as exc:
+
+                status_rows.append({
+                    "Backend":
+                        backend_name,
+
+                    "Status":
+                        f"Candidate {seed} failed: {exc}",
+
+                    "Operational":
+                        True,
+
+                    "Pending jobs":
+                        None
+                })
+
                 continue
 
     return (
@@ -506,7 +521,7 @@ selected_backends = st.multiselect(
 run = st.button(
     "🧭 Analyze with Live Calibration",
     type="primary",
-    use_container_width=True
+    width="stretch"
 )
 
 
@@ -613,7 +628,7 @@ if run:
 
         st.dataframe(
             status_df,
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )
 
@@ -874,7 +889,7 @@ if run:
 
     st.dataframe(
         ranking_df,
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 
@@ -924,7 +939,7 @@ if run:
 
     st.dataframe(
         backend_display,
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 

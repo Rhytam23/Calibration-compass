@@ -62,7 +62,9 @@ print("=" * 80)
 print("THRESHOLD SENSITIVITY")
 print("=" * 80)
 
-print("\nBest configuration:")
+print("\nBest configuration (descriptive only: selected on the same")
+print("evaluation decisions, so it is optimistic and must not be")
+print("used to tune thresholds):")
 print(best)
 
 print("\nBest configurations:")
@@ -76,8 +78,8 @@ print(
 print("\nCurrent configuration:")
 print(
     results[
-        (results["esp_threshold"] == 0.01) &
-        (results["advantage_threshold"] == 0.02)
+        np.isclose(results["esp_threshold"], 0.01) &
+        np.isclose(results["advantage_threshold"], 0.02)
     ].to_string(index=False)
 )
 

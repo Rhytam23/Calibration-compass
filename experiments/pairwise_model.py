@@ -1,4 +1,8 @@
-import numpy as np
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+
 import pandas as pd
 
 from xgboost import XGBClassifier
@@ -222,6 +226,27 @@ pair_train = create_pair_dataset(
 
 pair_test = create_pair_dataset(
     test_df
+)
+
+
+# Augment training pairs with the swapped (B, A) copy so the model
+# cannot learn a bias from the fixed backend ordering.
+_diff_columns = [
+    column
+    for column in pair_train.columns
+    if column.startswith("diff_")
+]
+
+_flipped = pair_train.copy()
+_flipped[_diff_columns] = -_flipped[_diff_columns]
+_flipped["target"] = 1 - _flipped["target"]
+_flipped[["backend_a", "backend_b"]] = (
+    pair_train[["backend_b", "backend_a"]].values
+)
+
+pair_train = pd.concat(
+    [pair_train, _flipped],
+    ignore_index=True
 )
 
 

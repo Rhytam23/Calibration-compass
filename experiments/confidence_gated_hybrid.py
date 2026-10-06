@@ -567,21 +567,43 @@ def learn_gates(
 
     group_data = []
 
-
-    for (_, _), group in training_df.groupby(
-        ["circuit_id", "backend"],
-        sort=True
+    # Out-of-fold scoring: each training group is scored by a model
+    # trained WITHOUT its circuit, so the gates are not tuned on
+    # predictions the model has already seen labels for.
+    for circuit in sorted(
+        training_df["circuit_id"].unique()
     ):
 
-        info = get_group_information(
-            group,
-            feature_df,
-            model
+        inner_train = training_df[
+            training_df["circuit_id"] != circuit
+        ]
+
+        if inner_train.empty:
+            continue
+
+        inner_model = train_model(
+            inner_train,
+            feature_df
         )
 
-        group_data.append(
-            info
-        )
+        inner_test = training_df[
+            training_df["circuit_id"] == circuit
+        ]
+
+        for (_, _), group in inner_test.groupby(
+            ["circuit_id", "backend"],
+            sort=True
+        ):
+
+            info = get_group_information(
+                group,
+                feature_df,
+                inner_model
+            )
+
+            group_data.append(
+                info
+            )
 
 
     # --------------------------------------------------------

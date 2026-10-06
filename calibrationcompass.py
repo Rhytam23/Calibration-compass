@@ -160,14 +160,10 @@ X = build_features(df)
 
 print(f"\nCircuits: {df['circuit_id'].nunique()}")
 print(f"Backends: {df['backend'].nunique()}")
-print(f"Candidates per group: 6")
-
-print("\nTraining final pairwise model...")
-
-model = train_model(df, X)
-
-print("Model trained.")
-
+print(
+    "Candidates per group: "
+    f"{int(df.groupby(['circuit_id', 'backend']).size().median())}"
+)
 
 print("\nAvailable circuits:")
 print(
@@ -176,12 +172,17 @@ print(
     )
 )
 
-circuit_id = int(
-    input("\nEnter circuit ID: ")
-)
+backends = sorted(df["backend"].unique())
+
+try:
+    circuit_id = int(
+        input("\nEnter circuit ID: ")
+    )
+except ValueError:
+    raise SystemExit("Circuit ID must be an integer.")
 
 backend = input(
-    "Enter backend (Fez / Sherbrooke / Torino): "
+    f"Enter backend ({' / '.join(backends)}): "
 ).strip()
 
 group = df[
@@ -189,10 +190,21 @@ group = df[
     (df["backend"].str.lower() == backend.lower())
 ].copy()
 
-if len(group) != 6:
-    raise ValueError(
-        "Could not find exactly 6 candidates for that circuit/backend."
+if group.empty:
+    raise SystemExit(
+        f"No candidates for circuit {circuit_id} on backend "
+        f"'{backend}'. Backends: {', '.join(backends)}"
     )
+
+# Hold the queried circuit out of training so the recommendation is
+# out-of-sample rather than scored by a model that saw its labels.
+train_mask = df["circuit_id"] != circuit_id
+
+print("\nTraining pairwise model (queried circuit held out)...")
+
+model = train_model(df[train_mask], X[train_mask])
+
+print("Model trained.")
 
 scores = get_scores(
     group,

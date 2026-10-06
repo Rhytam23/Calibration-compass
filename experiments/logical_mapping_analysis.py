@@ -132,9 +132,6 @@ def get_mapping(transpiled):
 
     for logical, physical in enumerate(final):
 
-        if logical >= 7:
-            break
-
         mapping[logical] = physical
 
     return mapping
@@ -232,7 +229,7 @@ for seed in [22, 33]:
             f"q[{logical}]"
             f"{physical:>12}"
             f"{twoq:>15}"
-            f"{sx_error:>15.6f}"
+            f"{(np.nan if sx_error is None else sx_error):>15.6f}"
             f"{weighted:>18.6f}"
         )
 

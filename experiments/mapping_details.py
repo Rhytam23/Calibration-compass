@@ -89,7 +89,7 @@ def inspect_candidate(circuit, backend, seed):
     print("-" * 70)
 
     try:
-        initial = layout.initial_index_layout()
+        initial = layout.initial_index_layout(filter_ancillas=True)
 
         for logical, physical in enumerate(initial):
             print(
@@ -107,7 +107,7 @@ def inspect_candidate(circuit, backend, seed):
     print("-" * 70)
 
     try:
-        final = layout.final_index_layout()
+        final = layout.final_index_layout(filter_ancillas=True)
 
         for logical, physical in enumerate(final):
             print(

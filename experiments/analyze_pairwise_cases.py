@@ -346,7 +346,7 @@ def inspect_case(
 
                 try:
                     value = float(value)
-                except:
+                except (TypeError, ValueError):
                     value = np.nan
 
                 values.append(

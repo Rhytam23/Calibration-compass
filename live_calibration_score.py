@@ -70,7 +70,7 @@ for seed in seeds:
         if name in ["measure", "barrier", "delay", "reset"]:
             continue
 
-        physical_indices = [q._index for q in qargs]
+        physical_indices = [compiled.find_bit(q).index for q in qargs]
 
         if len(physical_indices) == 2:
             two_qubit_count += 1
