@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "."))
+
 import math
 import csv
 from pathlib import Path
@@ -88,7 +93,9 @@ def get_calibration_score(compiled, props):
             pass
 
     return {
-        "mapping": sorted(used_qubits),
+        "mapping": [
+            int(p) for p in compiled.layout.final_index_layout()
+        ] if compiled.layout is not None else sorted(used_qubits),
         "readout_risk": readout_risk,
         "gate_risk": gate_risk,
         "total_risk": readout_risk + gate_risk,

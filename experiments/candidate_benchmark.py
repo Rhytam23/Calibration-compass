@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+
 import numpy as np
 import pandas as pd
 
@@ -260,7 +265,8 @@ def evaluate_candidate(
 
     ideal_job = ideal_simulator.run(
         transpiled,
-        shots=SHOTS
+        shots=SHOTS,
+        seed_simulator=1234
     )
 
     ideal_counts = (
@@ -281,7 +287,8 @@ def evaluate_candidate(
 
     noisy_job = noisy_simulator.run(
         transpiled,
-        shots=SHOTS
+        shots=SHOTS,
+        seed_simulator=5678
     )
 
     noisy_counts = (

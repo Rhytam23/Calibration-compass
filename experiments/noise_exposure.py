@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 from qiskit import QuantumCircuit, transpile
 from qiskit_ibm_runtime import fake_provider

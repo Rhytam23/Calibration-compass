@@ -1,3 +1,8 @@
+import os as _os
+
+# Resolve "results/..." relative to the repo root regardless of CWD.
+_os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "."))
+
 import csv
 from pathlib import Path
 
@@ -78,6 +83,9 @@ for backend_name in BACKENDS:
     print("-" * 90)
 
     backend = service.backend(backend_name)
+    # NOTE: this is the CURRENT calibration, not the calibration at the
+    # time the validation jobs ran, so risk features can differ from
+    # what the hardware actually experienced.
     props = backend.properties(refresh=True)
 
     backend_rows = [

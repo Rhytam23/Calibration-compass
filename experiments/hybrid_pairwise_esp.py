@@ -598,6 +598,94 @@ def get_pairwise_scores(
     return scores
 
 
+def make_model():
+
+    return XGBClassifier(
+
+        objective="binary:logistic",
+
+        n_estimators=200,
+
+        learning_rate=0.03,
+
+        max_depth=2,
+
+        min_child_weight=5,
+
+        subsample=0.8,
+
+        colsample_bytree=0.7,
+
+        reg_alpha=0.5,
+
+        reg_lambda=5.0,
+
+        random_state=RANDOM_STATE,
+
+        eval_metric="logloss",
+
+        tree_method="hist",
+    )
+
+
+def out_of_fold_scores(
+    training_df,
+    feature_df
+):
+    """Pairwise scores for each training group, produced by a model
+    trained WITHOUT that group's circuit (leave-one-circuit-out).
+
+    Learning the override threshold from in-sample scores would be
+    overconfident, since the model has seen those groups' labels.
+    """
+
+    scores_by_group = {}
+
+    for circuit in sorted(
+        training_df["circuit_id"].unique()
+    ):
+
+        inner_train = training_df[
+            training_df["circuit_id"] != circuit
+        ]
+
+        inner_test = training_df[
+            training_df["circuit_id"] == circuit
+        ]
+
+        if inner_train.empty:
+            continue
+
+        X_inner, y_inner = (
+            create_pairwise_training_data(
+                inner_train,
+                feature_df
+            )
+        )
+
+        inner_model = make_model()
+
+        inner_model.fit(
+            X_inner,
+            y_inner
+        )
+
+        for (c, backend), group in inner_test.groupby(
+            ["circuit_id", "backend"],
+            sort=True
+        ):
+
+            scores_by_group[(c, backend)] = (
+                get_pairwise_scores(
+                    group,
+                    feature_df,
+                    inner_model
+                )
+            )
+
+    return scores_by_group
+
+
 # ============================================================
 # LEARN ESP UNCERTAINTY THRESHOLD
 # ============================================================
@@ -607,6 +695,13 @@ def learn_threshold(
     feature_df,
     model
 ):
+
+    # Out-of-fold pairwise scores, computed once and reused for
+    # every candidate threshold.
+    oof_scores = out_of_fold_scores(
+        training_df,
+        feature_df
+    )
 
     training_margins = []
 
@@ -688,7 +783,7 @@ def learn_threshold(
         total = 0
 
 
-        for (_, _), group in training_df.groupby(
+        for (circuit_key, backend_key), group in training_df.groupby(
             ["circuit_id", "backend"],
             sort=True
         ):
@@ -735,11 +830,9 @@ def learn_threshold(
 
 
             # Pairwise candidate
-            pair_scores = get_pairwise_scores(
-                group,
-                feature_df,
-                model
-            )
+            pair_scores = oof_scores[
+                (circuit_key, backend_key)
+            ]
 
 
             pairwise = max(
@@ -952,32 +1045,7 @@ for counter, test_circuit in enumerate(
     # Train model
     # --------------------------------------------------------
 
-    model = XGBClassifier(
-
-        objective="binary:logistic",
-
-        n_estimators=200,
-
-        learning_rate=0.03,
-
-        max_depth=2,
-
-        min_child_weight=5,
-
-        subsample=0.8,
-
-        colsample_bytree=0.7,
-
-        reg_alpha=0.5,
-
-        reg_lambda=5.0,
-
-        random_state=RANDOM_STATE,
-
-        eval_metric="logloss",
-
-        tree_method="hist",
-    )
+    model = make_model()
 
 
     model.fit(

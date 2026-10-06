@@ -754,21 +754,43 @@ for counter, test_circuit in enumerate(
     training_groups = []
 
 
-    for (circuit, backend), group in train_df.groupby(
-        ["circuit_id", "backend"],
-        sort=True
+    # Out-of-fold: score each training group with a model trained
+    # without its circuit so alpha is not tuned on in-sample scores.
+    for inner_circuit in sorted(
+        train_df["circuit_id"].unique()
     ):
 
-        pair_scores = get_pairwise_scores(
-            group,
-            feature_df,
-            model
+        inner_train = train_df[
+            train_df["circuit_id"] != inner_circuit
+        ]
+
+        if inner_train.empty:
+            continue
+
+        inner_model = train_pairwise_model(
+            inner_train,
+            feature_df
         )
 
+        inner_test = train_df[
+            train_df["circuit_id"] == inner_circuit
+        ]
 
-        training_groups.append(
-            pair_scores
-        )
+        for (circuit, backend), group in inner_test.groupby(
+            ["circuit_id", "backend"],
+            sort=True
+        ):
+
+            pair_scores = get_pairwise_scores(
+                group,
+                feature_df,
+                inner_model
+            )
+
+
+            training_groups.append(
+                pair_scores
+            )
 
 
     # --------------------------------------------------------

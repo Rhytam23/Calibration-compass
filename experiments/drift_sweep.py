@@ -82,6 +82,11 @@ for factor in drift_factors:
 
     old_error = properties.error
 
+    if old_error is None:
+        raise RuntimeError(
+            "Fez qubit 1 has no measure error to scale"
+        )
+
     new_error = min(
         old_error * factor,
         0.50

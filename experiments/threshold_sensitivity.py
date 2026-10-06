@@ -62,7 +62,9 @@ print("=" * 80)
 print("THRESHOLD SENSITIVITY")
 print("=" * 80)
 
-print("\nBest configuration:")
+print("\nBest configuration (descriptive only: selected on the same")
+print("evaluation decisions, so it is optimistic and must not be")
+print("used to tune thresholds):")
 print(best)
 
 print("\nBest configurations:")
