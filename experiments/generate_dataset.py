@@ -16,7 +16,7 @@ from qiskit.quantum_info import hellinger_fidelity
 # SETTINGS
 # ============================================================
 
-NUMBER_OF_CIRCUITS = 30
+NUMBER_OF_CIRCUITS = int(_os.environ.get("CC_NUM_CIRCUITS", 30))
 SHOTS = 2000
 
 
