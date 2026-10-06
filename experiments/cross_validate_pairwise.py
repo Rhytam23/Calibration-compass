@@ -11,7 +11,7 @@ For every circuit:
 Each circuit contains 3 backends and 6 candidates.
 
 Therefore:
-    30 circuits x 3 backends = 90 decisions
+    10 circuits x 3 backends = 30 decisions
 
 We compare:
     1. ESP

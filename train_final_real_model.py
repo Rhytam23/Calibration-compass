@@ -11,12 +11,12 @@ print("CALIBRATIONCOMPASS - FINAL REAL HARDWARE MODEL TEST")
 print("=" * 90)
 
 
-BASE = Path(r"P:\Calibration-compass")
+BASE = Path(__file__).resolve().parent
 
 DATA_FILE = (
     BASE
     / "results"
-    / "real_hardware_dataset_final2.csv"
+    / "real_hardware_dataset_final.csv"
 )
 
 

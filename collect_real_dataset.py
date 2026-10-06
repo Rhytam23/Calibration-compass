@@ -364,8 +364,16 @@ for backend_name in BACKENDS:
 
         for seed in SEEDS:
 
+            # Measure the logical qubits BEFORE transpiling so the
+            # result register has one bit per logical qubit (3 bits),
+            # matching the ideal distribution. Measuring after
+            # transpile would add a 156-bit register and give
+            # fidelity 0.
+            logical = base_circuit.copy()
+            logical.measure_all()
+
             compiled = transpile(
-                base_circuit,
+                logical,
                 backend=backend,
                 optimization_level=3,
                 layout_method="sabre",
@@ -373,9 +381,7 @@ for backend_name in BACKENDS:
                 seed_transpiler=seed
             )
 
-            measured = compiled.copy()
-
-            measured.measure_all()
+            measured = compiled
 
             ideal_state = Statevector.from_instruction(
                 base_circuit

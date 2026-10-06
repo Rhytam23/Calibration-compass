@@ -638,7 +638,10 @@ def apply_random_drift(
                 ][(qubit,)]
             )
 
-            if properties is not None:
+            if (
+                properties is not None
+                and properties.error is not None
+            ):
 
                 old_error = (
                     properties.error
@@ -931,7 +934,7 @@ for circuit_id in range(
 
             rng = np.random.default_rng(
                 scenario_seed
-                + hash(backend_name) % 1000
+                + {"Sherbrooke": 0, "Torino": 1, "Fez": 2}.get(backend_name, 3)
             )
 
             # Day 0 = normal

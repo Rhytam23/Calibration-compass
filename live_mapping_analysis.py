@@ -39,9 +39,17 @@ backend_name = input(
     "\nBackend (Fez / Sherbrooke / Torino): "
 ).strip()
 
+if backend_name not in BACKENDS:
+    raise SystemExit(
+        f"Unknown backend '{backend_name}'. "
+        f"Choose one of: {', '.join(BACKENDS)}"
+    )
+
 backend = BACKENDS[backend_name]
 
 circuit = qasm2.loads(QASM)
+
+properties = backend.properties()
 
 rows = []
 
@@ -59,16 +67,21 @@ for seed in SEEDS:
     layout = compiled.layout
 
     mapping = []
+    physical_qubits = []
 
     if layout is not None:
 
+        try:
+            final_layout = layout.final_index_layout()
+        except Exception:
+            final_layout = []
+
         for logical in range(circuit.num_qubits):
 
-            try:
-                physical = layout.final_index_layout()[
-                    logical
-                ]
-            except Exception:
+            if logical < len(final_layout):
+                physical = final_layout[logical]
+                physical_qubits.append(physical)
+            else:
                 physical = "?"
 
             mapping.append(
@@ -77,17 +90,10 @@ for seed in SEEDS:
 
     readout_errors = []
 
-    for item in mapping:
-
-        if "->" not in item:
-            continue
-
-        physical = int(
-            item.split("->")[1]
-        )
+    for physical in physical_qubits:
 
         try:
-            error = backend.properties().readout_error(
+            error = properties.readout_error(
                 physical
             )
 

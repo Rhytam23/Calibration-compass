@@ -76,8 +76,8 @@ print(
 print("\nCurrent configuration:")
 print(
     results[
-        (results["esp_threshold"] == 0.01) &
-        (results["advantage_threshold"] == 0.02)
+        np.isclose(results["esp_threshold"], 0.01) &
+        np.isclose(results["advantage_threshold"], 0.02)
     ].to_string(index=False)
 )
 

@@ -97,9 +97,6 @@ def get_mapping(transpiled):
 
     for logical, physical in enumerate(final):
 
-        if logical >= 7:
-            break
-
         mapping[logical] = physical
 
     return mapping

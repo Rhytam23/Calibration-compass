@@ -10,7 +10,7 @@ print("=" * 90)
 print("CALIBRATIONCOMPASS - LEARNED MODEL VS LIVE HARDWARE")
 print("=" * 90)
 
-BASE = r"P:\Calibration-compass"
+BASE = os.path.dirname(os.path.abspath(__file__))
 
 TRAIN_FILE = os.path.join(
     BASE,
@@ -92,6 +92,24 @@ use_backend = (
     and
     "backend" in live_df.columns
 )
+
+if use_backend:
+
+    train_backends = set(train_df["backend"].astype(str))
+    live_backends = set(live_df["backend"].astype(str))
+
+    # Training uses simulated fake backends (Fez/Sherbrooke/Torino);
+    # live data uses real devices (ibm_fez/...). With no shared names
+    # the backend one-hot columns would be all-zero on live rows, so
+    # they carry no information and are skipped.
+    if not (train_backends & live_backends):
+        print()
+        print(
+            "Backend names do not overlap between training "
+            f"{sorted(train_backends)} and live "
+            f"{sorted(live_backends)}; not using backend as a feature."
+        )
+        use_backend = False
 
 if use_backend:
     print()
