@@ -17,7 +17,7 @@ from qiskit.transpiler import InstructionProperties
 # SETTINGS
 # ============================================================
 
-NUMBER_OF_CIRCUITS = int(_os.environ.get("CC_NUM_CIRCUITS", 40))
+NUMBER_OF_CIRCUITS = 40
 NUMBER_OF_DAYS = 8
 SHOTS = 2000
 
