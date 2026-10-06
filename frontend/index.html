@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CalibrationCompass</title>
+<style>
+  :root { --bg:#fff; --fg:#14181f; --muted:#5b6575; --card:#f4f6fa; --line:#d8dde6; --accent:#2f5bd9; --bad:#b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1218; --fg:#e8ecf3; --muted:#9aa4b5; --card:#181d27; --line:#2a3140; --accent:#7ea2ff; --bad:#ff8a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:880px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { margin:0 0 4px; font-size:1.9rem; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  label { display:block; font-weight:600; margin:16px 0 6px; }
+  textarea, input { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; }
+  textarea { min-height:200px; font-family:ui-monospace, monospace; font-size:.9rem; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; }
+  .row label.chk { font-weight:400; margin:0; }
+  button { margin-top:20px; padding:11px 22px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  .card { margin-top:24px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  .big { font-size:1.5rem; font-weight:700; }
+  .err { color:var(--bad); }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size:.9rem; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .scroll { overflow-x:auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🧭 CalibrationCompass</h1>
+  <p class="sub">Pick the IBM backend and qubit mapping with the lowest live calibration risk.</p>
+
+  <label for="qasm">OpenQASM 2.0 circuit</label>
+  <textarea id="qasm" spellcheck="false">OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[3];
+creg c[3];
+h q[0];
+cx q[0],q[1];
+cx q[1],q[2];
+measure q[0] -> c[0];
+measure q[1] -> c[1];
+measure q[2] -> c[2];</textarea>
+
+  <label>Backends</label>
+  <div class="row" id="backends">
+    <label class="chk"><input type="checkbox" value="ibm_fez" checked> ibm_fez</label>
+    <label class="chk"><input type="checkbox" value="ibm_kingston" checked> ibm_kingston</label>
+    <label class="chk"><input type="checkbox" value="ibm_marrakesh" checked> ibm_marrakesh</label>
+  </div>
+
+  <label for="key">Access key (only if the server requires one)</label>
+  <input id="key" type="password" autocomplete="off">
+
+  <button id="go">Analyze with live calibration</button>
+  <div id="out" aria-live="polite"></div>
+</main>
+<script src="config.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+$("go").addEventListener("click", async () => {
+  const out = $("out");
+  const btn = $("go");
+  const backends = [...document.querySelectorAll("#backends input:checked")].map((i) => i.value);
+  if (!backends.length) { out.innerHTML = '<p class="err">Select at least one backend.</p>'; return; }
+
+  btn.disabled = true;
+  out.innerHTML = '<div class="card">Analyzing… the first request can take up to a minute while the server wakes up.</div>';
+
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if ($("key").value) headers["X-API-Key"] = $("key").value;
+
+    const res = await fetch(`${window.CC_API_URL}/analyze`, {
+      method: "POST", headers,
+      body: JSON.stringify({ qasm: $("qasm").value, backends }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = data.detail;
+      throw new Error(typeof d === "string" ? d : (d && d.message) || `HTTP ${res.status}`);
+    }
+
+    const r = data.recommendation;
+    const margin = data.risk_margin == null ? "N/A" : data.risk_margin.toFixed(6);
+    const rows = data.candidates.map((c) =>
+      `<tr><td>${esc(c.backend)}</td><td>${esc(c.candidate)}</td><td>${c.combined_risk.toFixed(6)}</td>` +
+      `<td>${c.readout_loss.toFixed(5)}</td><td>${c.gate_loss.toFixed(5)}</td><td>${esc(c.two_q_gates)}</td><td>${esc(c.depth)}</td></tr>`).join("");
+
+    out.innerHTML = `
+      <div class="card">
+        <div>Recommended execution target</div>
+        <div class="big">${esc(r.backend)} · Candidate ${esc(r.candidate)}</div>
+        <div>Physical qubits: ${esc(r.physical_qubits.join(", "))}</div>
+        <div>Combined calibration risk: <b>${r.combined_risk.toFixed(6)}</b></div>
+        <div>Confidence: <b>${esc(data.confidence)}</b> (risk margin ${margin})</div>
+      </div>
+      <div class="card scroll"><b>All candidates</b>
+        <table><thead><tr><th>Backend</th><th>Cand.</th><th>Risk</th><th>Readout</th><th>Gate</th><th>2Q gates</th><th>Depth</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      </div>`;
+  } catch (e) {
+    out.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
