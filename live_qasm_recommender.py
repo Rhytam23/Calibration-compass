@@ -5,7 +5,7 @@ _os.chdir(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "."))
 
 from pathlib import Path
 
-from qiskit import QuantumCircuit, transpile, qasm2
+from qiskit import transpile, qasm2
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 

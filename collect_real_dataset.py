@@ -674,17 +674,21 @@ if (
             "gate_count":
                 math.nan,
 
+            # Not recorded in the source validation file; leave
+            # unknown rather than inventing values.
             "1Q_gates":
-                1,
+                math.nan,
 
             "2Q_gates":
                 r.get(
-                    "2Q_gates",
-                    2
+                    "two_qubit_count",
+                    r.get("2Q_gates", math.nan)
                 ),
 
             "readout_sum":
-                r["avg_readout"] * 3,
+                r["avg_readout"] * len(mapping)
+                if mapping
+                else math.nan,
 
             "avg_readout":
                 r["avg_readout"],
