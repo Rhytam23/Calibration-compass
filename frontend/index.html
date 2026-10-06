@@ -18,7 +18,8 @@
   textarea, input { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; }
   textarea { min-height:200px; font-family:ui-monospace, monospace; font-size:.9rem; }
   .row { display:flex; gap:16px; flex-wrap:wrap; }
-  .row label.chk { font-weight:400; margin:0; }
+  .row label.chk { display:flex; align-items:center; gap:6px; font-weight:400; margin:0; }
+  input[type=checkbox] { width:auto; margin:0; }
   button { margin-top:20px; padding:11px 22px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
   button:disabled { opacity:.6; cursor:wait; }
   .card { margin-top:24px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
